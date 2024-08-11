@@ -206,10 +206,14 @@ void restart(bool &iniciadoVisualizacion, int &indiceOperacion, Tower &a, Tower 
 
 void calculateTowersPos(Tower &a, const float windowWidth, const float windowHeight, float towerHeight, Tower &b, Tower &c, sf::RectangleShape &base, sf::Text &labelA, sf::Text &labelB, sf::Text &labelC);
 
-int main()
-{
+int calcularNMovimientos(int numDiscos) {
+    return pow(2, numDiscos) - 1;
+}
+
+int main() {
     const unsigned int FPS = 60;
     int numDisks = 3;
+    int numMoves = calcularNMovimientos(numDisks);
     const float windowWidth = 900;
     const float windowHeight = 600;
     float towerHeight = getTowerHeight(numDisks);
@@ -294,6 +298,7 @@ int main()
             if (buttonPlus.isPressed) {
                 if (numDisks < 15) {
                     numDisks++;
+                    numMoves = calcularNMovimientos(numDisks);
                     towerHeight = getTowerHeight(numDisks);
                     calculateTowersPos(a, windowWidth, windowHeight, towerHeight, b, c, base, labelA, labelB, labelC);
                     setDisks(a, b, c, numDisks, windowWidth, diskHeight, colors);
@@ -303,6 +308,7 @@ int main()
             if (buttonMinus.isPressed) {
                 if (numDisks > 1) {
                     numDisks--;
+                    numMoves = calcularNMovimientos(numDisks);
                     towerHeight = getTowerHeight(numDisks);
                     calculateTowersPos(a, windowWidth, windowHeight, towerHeight, b, c, base, labelA, labelB, labelC);
                     setDisks(a, b, c, numDisks, windowWidth, diskHeight, colors);
@@ -328,9 +334,10 @@ int main()
             // Animación
             if (!animating) {
                 Operation operation = operations[indiceOperacion];
-            
-                currentOperationText.setString("[" + std::to_string(indiceOperacion + 1) + "/" + std::to_string(operations.size()) + "]" + " Mover disco " + std::to_string(operation.diskNum) + " de " + std::string(1, operation.sourceLetter) + " a " + std::string(1, operation.destinationLetter));
-                std::cout << "[" << indiceOperacion + 1 << "/" << operations.size() << "] Mover disco " << operation.diskNum << " de " << operation.sourceLetter << " a " << operation.destinationLetter << std::endl;
+
+                std::string statusStr = "[" + std::to_string(indiceOperacion + 1) + "/" + std::to_string(operations.size()) + "]" + " Mover disco " + std::to_string(operation.diskNum) + " de " + std::string(1, operation.sourceLetter) + " a " + std::string(1, operation.destinationLetter);
+                currentOperationText.setString(statusStr);
+                std::cout << statusStr << std::endl;
 
                 Tower* source = nullptr;
                 Tower* destination = nullptr;
@@ -353,16 +360,12 @@ int main()
                 const float goalY = destination->getPosition().y - (destination->getDisks().size() + 1) * diskHeight - 10;
                 goal = sf::Vector2f(goalX, goalY);
                 init = sf::Vector2f(currentDisk->getPosition().x, currentDisk->getPosition().y);
-
-                std::cout << "Init: " << init.x << ", " << init.y << std::endl;
-                std::cout << "Goal: " << goal.x << ", " << goal.y << std::endl;
             }
 
             if (delta < 1.f) {
                 delta += 0.01f;
                 animateDiskMove(currentSource->getTopDisk(), init, goal, a.getPosition().y - towerHeight - 30, delta);
             } else {
-                std::cout << "Fin de animacion" << std::endl;
                 animating = false;
                 moveDisk(*currentSource, *currentDestination, operations, false);
                 indiceOperacion++;
@@ -410,7 +413,7 @@ int main()
 
         // - Botones
         if (!iniciadoVisualizacion) {
-            ndisksText.setString("n: " + std::to_string(numDisks));
+            ndisksText.setString("n: " + std::to_string(numDisks) + ", movimientos necesarios: " + std::to_string(numMoves));
             window.draw(ndisksText);
             buttonPlus.draw(window);
             buttonMinus.draw(window);
